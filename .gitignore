@@ -1,0 +1,6 @@
+.idea/
+.venv/
+__pycache__/
+*.lock
+main.py
+port_top.py
