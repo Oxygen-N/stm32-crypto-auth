@@ -1,4 +1,4 @@
-#include "main.h"
+п»ї#include "main.h"
 #include "usb_device.h"
 #include "gpio.h"
 #include "string.h"
@@ -7,18 +7,18 @@
 #include <stdlib.h>
 #include "stm32l5xx_hal_flash.h"
 
-// Константы HMAC-SHA256
+// РљРѕРЅСЃС‚Р°РЅС‚С‹ HMAC-SHA256
 #define BLOCK_SIZE 64
 #define HMAC_DIGEST_SIZE 32
 #define KEY_FLASH_ADDR 0x08080000
 
-// Структура для хранения ключа
+// РЎС‚СЂСѓРєС‚СѓСЂР° РґР»СЏ С…СЂР°РЅРµРЅРёСЏ РєР»СЋС‡Р°
 typedef struct {
     uint8_t key[32];
     uint8_t valid;
 } KeyStorage;
 
-// Макросы SHA-256
+// РњР°РєСЂРѕСЃС‹ SHA-256
 #define ROTR(x, n) ((x >> n) | (x << (32 - n)))
 #define CH(x, y, z) ((x & y) ^ (~x & z))
 #define MAJ(x, y, z) ((x & y) ^ (x & z) ^ (y & z))
@@ -27,14 +27,14 @@ typedef struct {
 #define LSIG0(x) (ROTR(x, 7) ^ ROTR(x, 18) ^ (x >> 3))
 #define LSIG1(x) (ROTR(x, 17) ^ ROTR(x, 19) ^ (x >> 10))
 
-// Глобальные переменные
+// Р“Р»РѕР±Р°Р»СЊРЅС‹Рµ РїРµСЂРµРјРµРЅРЅС‹Рµ
 volatile KeyStorage key_storage __attribute__((section(".key_section")));
 uint64_t current_time = 0;
 uint8_t USBRXDataReady = 0;
 uint8_t* USBRXDataBuffer;
 uint8_t USBRXDataLength = 0;
 
-// Константы SHA-256
+// РљРѕРЅСЃС‚Р°РЅС‚С‹ SHA-256
 static const uint32_t k[64] = {
     0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1,
     0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
@@ -49,7 +49,7 @@ static const uint32_t k[64] = {
     0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
 };
 
-// Прототипы функций
+// РџСЂРѕС‚РѕС‚РёРїС‹ С„СѓРЅРєС†РёР№
 void sha256_transform(uint32_t* state, const uint8_t* data);
 void sha256(const uint8_t* message, uint32_t len, uint8_t* digest);
 void compute_hmac(const uint8_t* msg, uint32_t msg_len, uint8_t* hmac);
@@ -58,7 +58,7 @@ void write_key_to_flash(const uint8_t* new_key);
 void read_key_from_flash();
 void SystemClock_Config(void);
 
-// Обработчик USB
+// РћР±СЂР°Р±РѕС‚С‡РёРє USB
 void USBRxHandler(uint8_t* buf, uint32_t len) {
     USBRXDataBuffer = buf;
     USBRXDataLength = len;
@@ -74,10 +74,10 @@ int main(void) {
 
     while(1) {
         if(USBRXDataReady) {
-            // Приведение типа для строковых операций
+            // РџСЂРёРІРµРґРµРЅРёРµ С‚РёРїР° РґР»СЏ СЃС‚СЂРѕРєРѕРІС‹С… РѕРїРµСЂР°С†РёР№
             char* cmd = (char*)USBRXDataBuffer;
 
-            // Обработка CHECK_KEY
+            // РћР±СЂР°Р±РѕС‚РєР° CHECK_KEY
             if(strncmp(cmd, "CHECK_KEY", 9) == 0) {
                 if(key_storage.valid) {
                     CDC_Transmit_FS((uint8_t*)"KEY_OK\r\n", 8);
@@ -86,7 +86,7 @@ int main(void) {
                 }
             }
 
-            // Обработка SET_KEY
+            // РћР±СЂР°Р±РѕС‚РєР° SET_KEY
             else if(strncmp(cmd, "SET_KEY ", 8) == 0) {
                 uint8_t new_key[32];
                 char hex_str[65] = {0};
@@ -100,12 +100,12 @@ int main(void) {
                 CDC_Transmit_FS((uint8_t*)"KEY_OK\r\n", 8);
             }
 
-            // Обработка GET_HMAC
+            // РћР±СЂР°Р±РѕС‚РєР° GET_HMAC
             else if(strncmp(cmd, "GET_HMAC ", 9) == 0) {
                 uint8_t hmac[HMAC_DIGEST_SIZE];
                 uint32_t msg_len = USBRXDataLength - 9;
 
-                // Обрезка \r\n
+                // РћР±СЂРµР·РєР° \r\n
                 if(msg_len >= 2 && cmd[msg_len+7] == '\r' && cmd[msg_len+8] == '\n') {
                     msg_len -= 2;
                 }
@@ -118,13 +118,13 @@ int main(void) {
                 CDC_Transmit_FS((uint8_t*)hex_buffer, 64);
             }
 
-            // Обработка SET_TIME
+            // РћР±СЂР°Р±РѕС‚РєР° SET_TIME
             else if(strncmp(cmd, "SET_TIME ", 9) == 0) {
                 current_time = strtoull(cmd + 9, NULL, 10);
                 CDC_Transmit_FS((uint8_t*)"TIME_OK\r\n", 9);
             }
 
-            // Обработка GET_TOTP
+            // РћР±СЂР°Р±РѕС‚РєР° GET_TOTP
             else if(strncmp(cmd, "GET_TOTP", 8) == 0) {
                 if(current_time == 0) {
                     CDC_Transmit_FS((uint8_t*)"TIME_NOT_SET\r\n", 14);
@@ -235,37 +235,37 @@ void sha256(const uint8_t* message, uint32_t len, uint8_t* digest) {
 }
 
 
-// --- Реализация HMAC-SHA256 ---
+// --- Р РµР°Р»РёР·Р°С†РёСЏ HMAC-SHA256 ---
 void compute_hmac(const uint8_t* msg, uint32_t msg_len, uint8_t* hmac) {
     uint8_t k_ipad[BLOCK_SIZE] = {0};
     uint8_t k_opad[BLOCK_SIZE] = {0};
     uint8_t temp_key[BLOCK_SIZE] = {0};
 
-    // 1. Подготовка ключа из энергонезависимой памяти
+    // 1. РџРѕРґРіРѕС‚РѕРІРєР° РєР»СЋС‡Р° РёР· СЌРЅРµСЂРіРѕРЅРµР·Р°РІРёСЃРёРјРѕР№ РїР°РјСЏС‚Рё
     if(key_storage.valid) {
-        // Если ключ короче размера блока - дополняем нулями
+        // Р•СЃР»Рё РєР»СЋС‡ РєРѕСЂРѕС‡Рµ СЂР°Р·РјРµСЂР° Р±Р»РѕРєР° - РґРѕРїРѕР»РЅСЏРµРј РЅСѓР»СЏРјРё
         memcpy(temp_key, (const void*)key_storage.key, 32);
         memset(temp_key + 32, 0, 32);
     } else {
-        // Обработка случая отсутствия ключа
+        // РћР±СЂР°Р±РѕС‚РєР° СЃР»СѓС‡Р°СЏ РѕС‚СЃСѓС‚СЃС‚РІРёСЏ РєР»СЋС‡Р°
         memset(temp_key, 0, BLOCK_SIZE);
     }
 
-    // 2. Если ключ длиннее размера блока - хешируем его
+    // 2. Р•СЃР»Рё РєР»СЋС‡ РґР»РёРЅРЅРµРµ СЂР°Р·РјРµСЂР° Р±Р»РѕРєР° - С…РµС€РёСЂСѓРµРј РµРіРѕ
     uint8_t key_hash[32];
-    if(BLOCK_SIZE < 32) { // Для SHA-256 размер блока 64, это условие никогда не выполнится
+    if(BLOCK_SIZE < 32) { // Р”Р»СЏ SHA-256 СЂР°Р·РјРµСЂ Р±Р»РѕРєР° 64, СЌС‚Рѕ СѓСЃР»РѕРІРёРµ РЅРёРєРѕРіРґР° РЅРµ РІС‹РїРѕР»РЅРёС‚СЃСЏ
         sha256(temp_key, BLOCK_SIZE, key_hash);
         memcpy(temp_key, key_hash, 32);
         memset(temp_key + 32, 0, 32);
     }
 
-    // 3. Генерация pads
+    // 3. Р“РµРЅРµСЂР°С†РёСЏ pads
     for(int i = 0; i < BLOCK_SIZE; i++) {
         k_ipad[i] = temp_key[i] ^ 0x36;
         k_opad[i] = temp_key[i] ^ 0x5C;
     }
 
-    // 4. Внутренний хеш: SHA256(K_ipad || message)
+    // 4. Р’РЅСѓС‚СЂРµРЅРЅРёР№ С…РµС€: SHA256(K_ipad || message)
     uint8_t inner_hash[32];
     uint8_t inner_data[BLOCK_SIZE + msg_len];
 
@@ -274,7 +274,7 @@ void compute_hmac(const uint8_t* msg, uint32_t msg_len, uint8_t* hmac) {
 
     sha256(inner_data, BLOCK_SIZE + msg_len, inner_hash);
 
-    // 5. Внешний хеш: SHA256(K_opad || inner_hash)
+    // 5. Р’РЅРµС€РЅРёР№ С…РµС€: SHA256(K_opad || inner_hash)
     uint8_t outer_data[BLOCK_SIZE + 32];
 
     memcpy(outer_data, k_opad, BLOCK_SIZE);
@@ -282,14 +282,14 @@ void compute_hmac(const uint8_t* msg, uint32_t msg_len, uint8_t* hmac) {
 
     sha256(outer_data, BLOCK_SIZE + 32, hmac);
 
-    // 6. Очистка чувствительных данных
+    // 6. РћС‡РёСЃС‚РєР° С‡СѓРІСЃС‚РІРёС‚РµР»СЊРЅС‹С… РґР°РЅРЅС‹С…
     memset(k_ipad, 0, BLOCK_SIZE);
     memset(k_opad, 0, BLOCK_SIZE);
     memset(temp_key, 0, BLOCK_SIZE);
     memset(inner_hash, 0, 32);
 }
 
-// --- Генерация TOTP ---
+// --- Р“РµРЅРµСЂР°С†РёСЏ TOTP ---
 uint32_t generate_totp(uint32_t interval){
 
 	if(!key_storage.valid) return 0;
